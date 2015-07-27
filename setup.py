@@ -12,7 +12,7 @@ with open('README.rst') as readme_file:
     readme = readme_file.read()
 
 requirements = [
-    # TODO: put package requirements here
+    'praw==3.1.0'
 ]
 
 test_requirements = [
