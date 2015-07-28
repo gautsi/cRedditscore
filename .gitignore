@@ -45,3 +45,7 @@ docs/_build
 
 # Temp gedit files
 *~
+
+# My other folders
+notebooks
+script
