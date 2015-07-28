@@ -25,6 +25,18 @@ class TestCollection(unittest.TestCase):
         subm = col.get_random_subm()
         assert not subm
 
+        rows = col.fetch_subm_from_table(subm)
+        assert rows == []
+
+        a = col.subm_to_db(subm)
+        assert not a
+
+        b = col.comment_to_db()
+        assert not b
+
+        c = col.rand_subm_to_db()
+        assert not c
+
     def tearDown(self):
         pass
 
