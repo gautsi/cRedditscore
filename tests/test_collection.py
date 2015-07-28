@@ -22,6 +22,9 @@ class TestCollection(unittest.TestCase):
         col = collection.collection()
         assert col.subreddits[0] == 'dataisbeautiful'
 
+        subm = col.get_random_subm()
+        assert not subm
+
     def tearDown(self):
         pass
 
