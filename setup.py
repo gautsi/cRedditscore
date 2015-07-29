@@ -12,7 +12,9 @@ with open('README.rst') as readme_file:
     readme = readme_file.read()
 
 requirements = [
-    'praw==3.1.0'
+    'praw==3.1.0',
+    'SQLAlchemy==1.0.8',
+    'pandas==0.16.2'
 ]
 
 test_requirements = [

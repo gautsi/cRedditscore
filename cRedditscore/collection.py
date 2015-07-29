@@ -19,32 +19,32 @@ class collection(object):
     The database for storing comments has a table `subm_table` for storing
     submission data with columns
 
-    * *submission_id*,
-    * *subreddit*, and
-    * *timestamp*
+    * *submission_id* (varchar(45)),
+    * *subreddit* (varchar(45)), and
+    * *timestamp* (int(11))
 
     and a table `comm_table` for storing comment data with columns
 
-    * *submission_id*,
-    * *subm_title*,
-    * *subm_content*,
-    * *subm_created*,
-    * *subm_created_local*,
-    * *subm_score*,
-    * *subm_author*,
-    * *subm_num_comments*,
-    * *comment_id*,
-    * *user_id*,
-    * *prev_comment_id*,
-    * *created*,
-    * *created_local*,
-    * *timestamp*,
-    * *content*,
-    * *subreddit*,
-    * *score*,
-    * *ups*,
-    * *downs*, and
-    * *controversiality*.
+    * *submission_id* (varchar(45)),
+    * *subm_title* (varchar(45)),
+    * *subm_content* (blob),
+    * *subm_created* (int(11)),
+    * *subm_created_local* (int(11)),
+    * *subm_score* (int(11)),
+    * *subm_author* (varchar(45)),
+    * *subm_num_comments* (int(11)),
+    * *comment_id* (varchar(45)),
+    * *user_id* (varchar(45)),
+    * *prev_comment_id* (varchar(45)),
+    * *created* (int(11)),
+    * *created_local* (int(11)),
+    * *timestamp* (int(11)),
+    * *content* (blob),
+    * *subreddit* (varchar(45)),
+    * *score* (int(11)),
+    * *ups* (int(11)),
+    * *downs* (int(11)), and
+    * *controversiality* (int(11)).
 
     :param string user_agent:
         the name of the web app to connect to the api through
