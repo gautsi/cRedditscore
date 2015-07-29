@@ -12,9 +12,14 @@ class TermFreqModel(object):
     with columns
 
     * *comment_id*: a unique identifier for each comment
+    * *score* (int): the score of the comment
+    * *content*: the comment itself
+
+    For example, suppose we
 
     :param pandas.core.frame.DataFrame comments_df:
         The dataframe containing the comment data
+
     """
 
     def __init__(self, comments_df):

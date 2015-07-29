@@ -17,7 +17,7 @@ from cRedditscore import cRedditscore
 class TestCredditscore(unittest.TestCase):
 
     def setUp(self):
-        self.test_df = pd.read_csv('test_data_1000.csv', index_col='id')
+        self.test_df = pd.read_csv('tests/test_data_1000.csv', index_col='id')
 
     def test_something(self):
         tfm = cRedditscore.TermFreqModel(self.test_df)
