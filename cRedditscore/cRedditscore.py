@@ -15,18 +15,47 @@ class TermFreqModel(object):
     * *score* (int): the score of the comment
     * *content*: the comment itself
 
-    For example, suppose we
-
     :param pandas.core.frame.DataFrame comments_df:
         The dataframe containing the comment data
-
+    :param int low_thresh:
+        The lower bound for the score of a neutral comment.
+        Anything lower is considered a bad comment.
+    :param int high_thresh:
+        The upper bound for the score of a neutral comment.
+        Anything higher is considered a good comment.
     """
 
-    def __init__(self, comments_df):
+    def __init__(self, comments_df, low_thresh=0, high_thresh=15):
         self.comments_df = comments_df
+        self.high_thresh = high_thresh
+        self.low_thresh = low_thresh
 
         # Pick only the most recent observation of each comment
         self.comments_most_recent = self.most_recent_obs(self.comments_df)
+        self.add_qual_feature(self.comments_most_recent)
+
+    def add_qual_feature(self, df):
+        """
+        Add the comment quality feature to the data.
+        This will be our outcome variable.
+        """
+
+        df['qual'] = df.score.apply(lambda x: self.get_quality(x))
+
+    def get_quality(self, score):
+        """
+        Get the quality (good, bad, neutral) of a score
+        based on the score thresholds.
+        """
+
+        if score > self.high_thresh:
+            qual = 'good'
+        elif score < self.low_thresh:
+            qual = 'bad'
+        else:
+            qual = 'neutral'
+
+        return qual
 
     def most_recent_obs(self, df):
         """
