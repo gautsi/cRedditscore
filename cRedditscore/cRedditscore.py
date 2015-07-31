@@ -5,6 +5,7 @@ predictive models for the quality of comments on reddit.
 '''
 
 import pandas as pd
+from sklearn import cross_validation
 
 
 class TermFreqModel(object):
@@ -46,23 +47,73 @@ class TermFreqModel(object):
         self.high_thresh = high_thresh
         self.low_thresh = low_thresh
 
+        self.setup_data()
+
+    def setup_data(self):
+        '''
+        Set up the data for model training.
+        In detail:
+
+        * Remove all but the most recent observation for each comment
+        * Add the quality feature to the data, which will be our outcome
+          variable
+        * Separate out the good and bad comments. This will be the data
+          we train the model on.
+
+        '''
         # Pick only the most recent observation of each comment
         self.comments_data_set = self.most_recent_obs(self.comments_df)
 
         # Add the quality feature to the data
         self.add_qual_feature(self.comments_data_set)
 
-        # Separate out the good and bad comments
-        self.good_df = self.comments_data_set[
-            self.comments_data_set.qual == 'good'
-            ]
-
-        self.bad_df = self.comments_data_set[
-            self.comments_data_set.qual == 'bad'
-            ]
+        # Get the good and bad comments
+        self.good_df, self.bad_df = self.get_good_bad(self.comments_data_set)
 
         # Combine good and bad comments
         self.good_bad_df = pd.concat([self.good_df, self.bad_df])
+
+    def train_test(self, test_size=0.2):
+        '''Split the data into train and test sets.'''
+
+        train_test = cross_validation.train_test_split(
+            self.good_bad_df.content,
+            self.good_bad_df.qual,
+            test_size=test_size, random_state=0
+            )
+
+        self.X_train, self.X_test, self.y_train, self.y_test = train_test
+
+    def make_model(self, test_size=0.2):
+        '''
+        Split the data into train and test sets and
+        train the Naive Bayes model.
+        '''
+
+        self.train_test(test_size)
+
+    def get_good_bad(self, df):
+        '''
+        Get the good and bad comments in a data set.
+
+        :param pandas.core.frame.DataFrame df:
+            The comments data set.
+
+        :return:
+            The dataframes containing
+            only the good and bad comments from `df`.
+        :rtype: pandas.core.frame.DataFrame, pandas.core.frame.DataFrame
+        '''
+
+        good_df = self.comments_data_set[
+            self.comments_data_set.qual == 'good'
+            ]
+
+        bad_df = self.comments_data_set[
+            self.comments_data_set.qual == 'bad'
+            ]
+
+        return good_df, bad_df
 
     def add_qual_feature(self, df):
         '''
@@ -90,6 +141,10 @@ class TermFreqModel(object):
         >>> tfm = TermFreqModel(comments_df = test_df)
         >>> tfm.get_quality(test_df.score[0])
         'neutral'
+
+        :param int score: The score of the comment.
+        :returns: the quality of the comment (good, bad or neutral)
+        :rtype: string
         '''
 
         if score > self.high_thresh:

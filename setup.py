@@ -14,7 +14,9 @@ with open('README.rst') as readme_file:
 requirements = [
     'praw==3.1.0',
     'SQLAlchemy==1.0.8',
-    'pandas==0.16.2'
+    'pandas==0.16.2',
+    'scipy==0.16.0',
+    'scikit-learn==0.16.1'
 ]
 
 test_requirements = [
