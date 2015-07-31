@@ -15,6 +15,17 @@ class TermFreqModel(object):
     * *score* (int): the score of the comment
     * *content*: the comment itself
 
+    For example,
+
+    >>> import pandas as pd
+    >>> test_df = pd.DataFrame([
+    ... [1, 1, "That's cool", 1],
+    ... [2, -3, "boo you", 2],
+    ... [3, 4, "I love you", 2],
+    ... [3, 10, "I love you", 4],
+    ... ], columns=['comment_id', 'score', 'content', 'timestamp'])
+    >>> tfm = TermFreqModel(comments_df = test_df)
+
     :param pandas.core.frame.DataFrame comments_df:
         The dataframe containing the comment data
     :param int low_thresh:
