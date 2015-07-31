@@ -55,7 +55,7 @@ docs:
 	sphinx-apidoc -o docs/ cRedditscore
 	$(MAKE) -C docs clean
 	$(MAKE) -C docs html
-	open docs/_build/html/index.html
+	firefox docs/_build/html/index.html
 
 release: clean
 	python setup.py sdist upload

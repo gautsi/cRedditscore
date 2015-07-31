@@ -10,6 +10,7 @@ Tests for `cRedditscore` module.
 
 import unittest
 import pandas as pd
+import numpy as np
 
 from cRedditscore import cRedditscore
 
@@ -21,8 +22,12 @@ class TestCredditscore(unittest.TestCase):
 
     def test_something(self):
         tfm = cRedditscore.TermFreqModel(self.test_df)
+
         assert len(tfm.comments_df) == 1000
-        assert len(tfm.comments_most_recent) == 990
+
+        assert len(tfm.get_data()) == 990
+
+        assert np.sum(tfm.get_data().qual == 'good') == 71
 
     def tearDown(self):
         pass
