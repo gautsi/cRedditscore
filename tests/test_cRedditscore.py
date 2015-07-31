@@ -29,6 +29,8 @@ class TestCredditscore(unittest.TestCase):
 
         assert np.sum(tfm.get_data().qual == 'good') == 71
 
+        assert tfm.make_model() is None
+
     def tearDown(self):
         pass
 
