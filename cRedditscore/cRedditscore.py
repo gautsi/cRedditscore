@@ -7,8 +7,8 @@ predictive models for the quality of comments on reddit.
 import pandas as pd
 from sklearn import cross_validation
 from sklearn.pipeline import Pipeline
-from sklearn.feature_extraction.text import CountVectorizer
-from sklearn.feature_extraction.text import TfidfTransformer
+# from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
+from sklearn.feature_extraction import text
 from sklearn.naive_bayes import MultinomialNB
 
 
@@ -97,7 +97,7 @@ class TermFreqModel(object):
         self.train_test(test_size)
 
         # Make the count vectorizer
-        self.cvec = CountVectorizer(
+        self.cvec = text.CountVectorizer(
             ngram_range=(1, 4),
             stop_words='english',
             max_features=1000
@@ -106,7 +106,7 @@ class TermFreqModel(object):
         # Make the pipeline
         self.model = Pipeline([
             ('vect', self.cvec),
-            ('tfidf', TfidfTransformer(use_idf=False)),
+            ('tfidf', text.TfidfTransformer(use_idf=False)),
             ('gnb', MultinomialNB()),
             ])
 
