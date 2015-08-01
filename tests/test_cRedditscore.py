@@ -29,7 +29,12 @@ class TestCredditscore(unittest.TestCase):
 
         assert np.sum(tfm.get_data().qual == 'good') == 71
 
-        assert tfm.make_model() is None
+        tfm.train_test(test_size=0.1)
+        assert len(tfm.X_train) == 177
+
+        tfm.make_model()
+        one_prediction = tfm.model.predict(['Hello'])
+        assert one_prediction in ['good', 'bad']
 
     def tearDown(self):
         pass

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 '''
-A module of tools to train, test, validate and package
+A module of tools to train and package
 predictive models for the quality of comments on reddit.
 '''
 
@@ -9,6 +9,38 @@ from sklearn import cross_validation
 from sklearn import pipeline
 from sklearn.feature_extraction import text
 from sklearn import naive_bayes
+import pickle as pk
+
+
+def get_quality(score, low_thresh=0, high_thresh=15):
+    '''
+    Get the quality (good, bad, neutral) of a score
+    based on the score thresholds.
+
+    For example,
+
+    >>> get_quality(score=15)
+    'neutral'
+    >>> get_quality(score=2, low_thresh=5, high_thresh=20)
+    'bad'
+    >>> get_quality(score=2, low_thresh=-10, high_thresh=1)
+    'good'
+
+    :param int score: the score of the comment
+    :param int low_thresh: the low threshold of a neutral comment
+    :param int high_thresh: the high threshold of a neutral comment
+    :returns: the quality of the comment (good, bad or neutral)
+    :rtype: string
+    '''
+
+    if score > high_thresh:
+        qual = 'good'
+    elif score < low_thresh:
+        qual = 'bad'
+    else:
+        qual = 'neutral'
+
+    return qual
 
 
 class TermFreqModel(object):
@@ -36,13 +68,13 @@ class TermFreqModel(object):
     >>> tfm = TermFreqModel(comments_df = test_df)
 
     :param pandas.core.frame.DataFrame comments_df:
-        The dataframe containing the comment data
+        the dataframe containing the comment data
     :param int low_thresh:
-        The lower bound for the score of a neutral comment.
-        Anything lower is considered a bad comment.
+        the lower bound for the score of a neutral comment.
+        Anything lower is considered a bad comment
     :param int high_thresh:
-        The upper bound for the score of a neutral comment.
-        Anything higher is considered a good comment.
+        the upper bound for the score of a neutral comment.
+        Anything higher is considered a good comment
 
     '''
 
@@ -64,6 +96,12 @@ class TermFreqModel(object):
         * Separate out the good and bad comments. This will be the data
           we train the model on.
 
+        This function adds a new class attribute
+
+        * *good_bad_df*:
+            the dataframe containing only
+            the most recent observations of the
+            good and bad comments
         '''
         # Pick only the most recent observation of each comment
         self.comments_data_set = self.most_recent_obs(self.comments_df)
@@ -78,7 +116,19 @@ class TermFreqModel(object):
         self.good_bad_df = pd.concat([self.good_df, self.bad_df])
 
     def train_test(self, test_size=0.2):
-        '''Split the data into train and test sets.'''
+        '''
+        Split the data into train and test sets.
+
+        This function adds new class attributes
+
+        * *X_train* and *X_test*,
+            The features of the training and test parts of the data set
+        * *y_train* and *y_test*,
+            The outcomes of the training and test parts of the data set
+
+        :param int test_size:
+            the percentage of data points to hold out for testing
+        '''
 
         train_test = cross_validation.train_test_split(
             self.good_bad_df.content,
@@ -91,7 +141,35 @@ class TermFreqModel(object):
     def make_model(self, test_size=0.2):
         '''
         Split the data into train and test sets and
-        train the Naive Bayes model.
+        trains the Naive Bayes model.
+
+        This function adds new class attribute
+
+        * **model** *sklearn.pipeline.Pipeline*: the trained model
+
+        For example, we make a small comments data set,
+
+        >>> import pandas as pd
+        >>> test_df = pd.DataFrame([
+        ...     [1, 1, "That's cool", 1],
+        ...     [2, -3, 'boo you', 2],
+        ...     [3, 4, 'I love you', 2],
+        ...     [3, 16, 'I love you', 4],
+        ...     ], columns=['comment_id', 'score', 'content', 'timestamp'])
+
+        build a `TermFreqModel` object from it,
+
+        >>> tfm = TermFreqModel(test_df)
+
+        and train a model on it predictive of the quality of a comment.
+
+        >>> tfm.make_model()
+        >>> prediction = tfm.model.predict(['Thanks for a great post!'])
+        >>> prediction in ['good', 'bad']
+        True
+
+        :param int test_size:
+            the percentage of data points to hold out for testing
         '''
 
         self.train_test(test_size)
@@ -113,16 +191,26 @@ class TermFreqModel(object):
         # Fit the model
         self.model.fit(self.X_train, self.y_train)
 
+    def dump_model(self, pickle_name='text_mnb_model'):
+        '''
+        Dump the model object to file with `pickle`.
+
+        :param string pickle_name:
+            the name of the file to dump the object to
+        '''
+        write_file = open(pickle_name, 'w')
+        pk.dump(self.model, write_file)
+
     def get_good_bad(self, df):
         '''
         Get the good and bad comments in a data set.
 
         :param pandas.core.frame.DataFrame df:
-            The comments data set.
+            the comments data set
 
         :return:
-            The dataframes containing
-            only the good and bad comments from `df`.
+            the dataframes containing
+            only the good and bad comments from `df`
         :rtype: pandas.core.frame.DataFrame, pandas.core.frame.DataFrame
         '''
 
@@ -138,44 +226,20 @@ class TermFreqModel(object):
 
     def add_qual_feature(self, df):
         '''
-        Add the comment quality feature to the data.
+        Add the comment quality feature to the data
+        as a new column named `qual`.
         This will be our outcome variable.
+
+        :param pandas.core.frame.DataFrame df:
+            the data frame to add the `qual` column to
         '''
 
-        df['qual'] = df.score.apply(lambda x: self.get_quality(x))
+        qual_func = lambda x: get_quality(
+            score=x,
+            low_thresh=self.low_thresh,
+            high_thresh=self.high_thresh)
 
-    def get_quality(self, score):
-        '''
-        Get the quality (good, bad, neutral) of a score
-        based on the score thresholds.
-
-        For example, we make a small comment data set and get
-        the quality of the first comment:
-
-        >>> import pandas as pd
-        >>> test_df = pd.DataFrame([
-        ...     [1, 1, "That's cool", 1],
-        ...     [2, -3, "boo you", 2],
-        ...     [3, 4, "I love you", 2],
-        ...     [3, 16, "I love you", 4],
-        ...     ], columns=['comment_id', 'score', 'content', 'timestamp'])
-        >>> tfm = TermFreqModel(comments_df = test_df)
-        >>> tfm.get_quality(test_df.score[0])
-        'neutral'
-
-        :param int score: The score of the comment.
-        :returns: the quality of the comment (good, bad or neutral)
-        :rtype: string
-        '''
-
-        if score > self.high_thresh:
-            qual = 'good'
-        elif score < self.low_thresh:
-            qual = 'bad'
-        else:
-            qual = 'neutral'
-
-        return qual
+        df['qual'] = df.score.apply(qual_func)
 
     def most_recent_obs(self, df):
         '''
@@ -186,7 +250,7 @@ class TermFreqModel(object):
             The data set of comments
 
         :returns:
-            The data set containing only the most
+            the data set containing only the most
             recent observation of each comment in `df`
         :rtype: pandas.core.frame.DataFrame
         '''
@@ -198,7 +262,7 @@ class TermFreqModel(object):
         Get the full data set of the model.
 
         :returns:
-            The full data set underlying the model.
+            the full data set underlying the model
         :rtype: pandas.core.frame.DataFrame
         '''
 
