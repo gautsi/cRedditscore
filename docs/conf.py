@@ -36,10 +36,9 @@ class Mock(object):
 
 MOCK_MODULES = [
     'scipy',
-    'sklearn.feature_extraction',
     'sklearn',
-    'sklearn.pipeline',
-    'sklearn.naive_bayes'
+    'sklearn.naive_bayes',
+    'sklearn.feature_extraction',
     ]
 for mod_name in MOCK_MODULES:
     sys.modules[mod_name] = Mock()

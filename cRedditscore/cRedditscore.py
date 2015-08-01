@@ -6,10 +6,9 @@ predictive models for the quality of comments on reddit.
 
 import pandas as pd
 from sklearn import cross_validation
-from sklearn.pipeline import Pipeline
-# from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
+from sklearn import pipeline
 from sklearn.feature_extraction import text
-from sklearn.naive_bayes import MultinomialNB
+from sklearn import naive_bayes
 
 
 class TermFreqModel(object):
@@ -44,6 +43,7 @@ class TermFreqModel(object):
     :param int high_thresh:
         The upper bound for the score of a neutral comment.
         Anything higher is considered a good comment.
+
     '''
 
     def __init__(self, comments_df, low_thresh=0, high_thresh=15):
@@ -104,10 +104,10 @@ class TermFreqModel(object):
             )
 
         # Make the pipeline
-        self.model = Pipeline([
+        self.model = pipeline.Pipeline([
             ('vect', self.cvec),
             ('tfidf', text.TfidfTransformer(use_idf=False)),
-            ('gnb', MultinomialNB()),
+            ('gnb', naive_bayes.MultinomialNB()),
             ])
 
         # Fit the model
