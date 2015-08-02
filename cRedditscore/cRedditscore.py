@@ -145,7 +145,8 @@ class TermFreqModel(object):
 
         This function adds new class attribute
 
-        * **model** *sklearn.pipeline.Pipeline*: the trained model
+        * *model*:
+            the trained model as an *sklearn.pipeline.Pipeline* object
 
         For example, we make a small comments data set,
 
