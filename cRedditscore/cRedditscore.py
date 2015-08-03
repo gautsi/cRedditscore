@@ -138,7 +138,11 @@ class TermFreqModel(object):
 
         self.X_train, self.X_test, self.y_train, self.y_test = train_test
 
-    def make_model(self, test_size=0.2):
+    def make_model(self,
+                   test_size=0.2,
+                   ngram_range=(1, 4),
+                   max_features=1000
+                   ):
         '''
         Split the data into train and test sets and
         trains the Naive Bayes model.
@@ -164,22 +168,26 @@ class TermFreqModel(object):
 
         and train a model on it predictive of the quality of a comment.
 
-        >>> tfm.make_model()
+        >>> tfm.make_model(test_size=0.1, ngram_range=(1, 3), max_features=10)
         >>> prediction = tfm.model.predict(['Thanks for a great post!'])
         >>> prediction in ['good', 'bad']
         True
 
         :param int test_size:
             the percentage of data points to hold out for testing
+        :param tuple ngram_range:
+            the range of n for ngrams to include as features
+        :param int max_features:
+            the maximum number of features to include
         '''
 
         self.train_test(test_size)
 
         # Make the count vectorizer
         self.cvec = text.CountVectorizer(
-            ngram_range=(1, 4),
+            ngram_range=ngram_range,
             stop_words='english',
-            max_features=1000
+            max_features=max_features
             )
 
         # Make the pipeline

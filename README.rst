@@ -10,3 +10,7 @@ An automatic comment flagger for online forums
 * Free software: BSD license
 * Documentation: https://cRedditscore.readthedocs.org.
 
+TODO
+----
+
+* Update tests for make_model to include parameters
