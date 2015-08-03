@@ -20,6 +20,14 @@ cRedditscore.collection module
     :undoc-members:
     :show-inheritance:
 
+cRedditscore.evaluation module
+------------------------------
+
+.. automodule:: cRedditscore.evaluation
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 
 Module contents
 ---------------

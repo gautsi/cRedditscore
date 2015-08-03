@@ -8,7 +8,7 @@ import time as tm
 from sqlalchemy.exc import StatementError
 
 
-class collection(object):
+class Collect(object):
     """
     A class to handle the collecting and storing of comment data from Reddit.
 
@@ -59,7 +59,7 @@ class collection(object):
 
     For example,
 
-    >>> col = collection()
+    >>> col = Collect()
     >>> col.subreddits[0]
     'dataisbeautiful'
     """

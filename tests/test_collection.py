@@ -19,7 +19,8 @@ class TestCollection(unittest.TestCase):
         pass
 
     def test_something(self):
-        col = collection.collection()
+
+        col = collection.Collect()
         assert col.subreddits[0] == 'dataisbeautiful'
 
         subm = col.get_random_subm()
