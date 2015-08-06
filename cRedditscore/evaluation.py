@@ -52,6 +52,7 @@ class Evaluate(object):
       response belongs to the first class
 
     For example, we make a dummy test set and model:
+
     >>> model = GenModel(predict = lambda x : ['blue' for i in x])
     >>> test_features = range(20)
     >>> test_responses = np.array(
@@ -59,6 +60,7 @@ class Evaluate(object):
     ...     )
 
     and make an `Evaluate` object to test its accuracy.
+
     >>> eval = Evaluate(model)
     >>> eval.accuracy(test_features=test_features,
     ...     test_responses=test_responses)
