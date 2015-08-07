@@ -14,3 +14,4 @@ TODO
 ----
 
 * Update tests for make_model to include parameters
+* Use sklearn.cross_validation.cross_val_score

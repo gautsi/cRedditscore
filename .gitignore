@@ -49,3 +49,5 @@ docs/_build
 # My other folders
 notebooks
 script
+old_*
+.ipynb*
