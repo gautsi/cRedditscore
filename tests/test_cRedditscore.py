@@ -44,6 +44,9 @@ class TestCredditscore(unittest.TestCase):
 
         # test make_model
         tfm.make_model()
+
+        # test fit
+        tfm.fit()
         one_prediction = tfm.model.predict(['Hello'])
         assert one_prediction in ['good', 'bad']
 

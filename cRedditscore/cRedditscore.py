@@ -144,13 +144,10 @@ class TermFreqModel(object):
                    max_features=1000
                    ):
         '''
-        Split the data into train and test sets and
-        trains the Naive Bayes model.
-
-        This function adds new class attribute
+        Make a new class attribute
 
         * *model*:
-            the trained model as an *sklearn.pipeline.Pipeline* object
+            the Naive Bayes model as an *sklearn.pipeline.Pipeline* object
 
         For example, we make a small comments data set,
 
@@ -168,7 +165,9 @@ class TermFreqModel(object):
 
         and train a model on it predictive of the quality of a comment.
 
-        >>> tfm.make_model(test_size=0.1, ngram_range=(1, 3), max_features=10)
+        >>> tfm.train_test(test_size=0.1)
+        >>> tfm.make_model(ngram_range=(1, 3), max_features=10)
+        >>> tfm.fit()
         >>> prediction = tfm.model.predict(['Thanks for a great post!'])
         >>> prediction in ['good', 'bad']
         True
@@ -180,8 +179,6 @@ class TermFreqModel(object):
         :param int max_features:
             the maximum number of features to include
         '''
-
-        self.train_test(test_size)
 
         # Make the count vectorizer
         self.cvec = text.CountVectorizer(
@@ -197,7 +194,8 @@ class TermFreqModel(object):
             ('gnb', naive_bayes.MultinomialNB()),
             ])
 
-        # Fit the model
+    def fit(self):
+        '''Fit the model.'''
         self.model.fit(self.X_train, self.y_train)
 
     def dump_model(self, pickle_name='text_mnb_model'):

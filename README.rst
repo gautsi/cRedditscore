@@ -14,4 +14,5 @@ TODO
 ----
 
 * Update tests for make_model to include parameters
-* Use sklearn.cross_validation.cross_val_score
+* Add test data functionality to Evaluate.compute_scores
+* Add tests for Evaluate.compute_scores

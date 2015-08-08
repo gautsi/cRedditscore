@@ -3,6 +3,7 @@
 A module of tools to evaluate predictive models.
 '''
 import numpy as np
+from sklearn import cross_validation
 
 
 class EvalError(Exception):
@@ -68,20 +69,82 @@ class Evaluate(object):
 
     :param model:
         the model to evaluate, described above
+    :param array-like data_features:
+        the features of the data to evaluate the model on,
+        generally the training set features
+    :param array-like data_responses:
+        the responses of the data to evaluate the model on
 
     '''
 
-    def __init__(self, model=None):
+    def __init__(self, model=None, data_features=None, data_responses=None):
         self.model = model
+        self.data_features = data_features
+        self.data_responses = data_responses
 
-    def accuracy(self, test_features, test_responses, train=None):
+    def cv_split(self, k=10):
+        '''
+        Make k folds of the data using stratified cross validation.
+
+        :param int k:
+            The number of folds to divide the data into
+        '''
+
+        self.cv = cross_validation.StratifiedKFold(
+            self.data_responses,
+            n_folds=k
+            )
+
+    def compute_scores(self, test_features=None, test_responses=None):
+        '''
+        Compute the metric scores for the model on the
+        cross-validation folds of the training data
+        or on the test data, storing the results in a dataframe.
+
+        Add a new class attribute
+
+        * *scores*,
+            the results of the computations as a
+            `pandas.core.frame.DataFrame` object
+
+        :param array-like test_features:
+            The features of the test data. If none, evaluate the model
+            on the cv folds.
+        :param array-like test_responses:
+            The responses of the test data. If none, evaluate the model
+            on the cv folds.
+        '''
+
+        self.accuracies = []
+        for i, (train, test) in enumerate(self.cv):
+            self.model.fit(
+                self.data_features[train],
+                self.data_responses[train]
+                )
+            predictions = self.model.predict(self.data_features[test])
+            self.accuracies.append(
+                self.accuracy(
+                    test_responses=self.data_responses[test],
+                    predictions=predictions
+                    )
+                )
+
+    def accuracy(self,
+                 test_responses,
+                 test_features=None,
+                 predictions=None,
+                 train=None):
         '''
         Find the accuracy of the model on a given test set.
 
-        :param array-like test_features:
-            the features of the test set
         :param array-like test_responses:
             the responses of the test set
+        :param array-like test_features:
+            the features of the test set to predict on.
+            If None, use the pre-made `predictions`
+        :param array-like predictions:
+            the predictions to test.
+            If None, use `test_features` to predict on
         :param array-like train:
             the data set to train the model on (optional)
         '''
@@ -99,8 +162,9 @@ class Evaluate(object):
             else:
                 self.model.fit(train)
 
-        # make the prediction
-        predictions = self.model.predict(test_features)
+        if not predictions:
+            # make the prediction
+            predictions = self.model.predict(test_features)
 
         # make sure the lengths of predictions and test_responses match up
         if not len(predictions) == len(test_responses):
