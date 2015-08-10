@@ -3,7 +3,9 @@
 A module of tools to evaluate predictive models.
 '''
 import numpy as np
+import pandas as pd
 from sklearn import cross_validation
+from sklearn import metrics as skmetrics
 
 
 class EvalError(Exception):
@@ -74,13 +76,26 @@ class Evaluate(object):
         generally the training set features
     :param array-like data_responses:
         the responses of the data to evaluate the model on
-
+    :param pos_label:
+        the class to be considered positive for auc, precision and recall;
+        if None, the first class is picked
     '''
 
-    def __init__(self, model=None, data_features=None, data_responses=None):
+    def __init__(self,
+                 model=None,
+                 data_features=None,
+                 data_responses=None,
+                 pos_label=None):
         self.model = model
         self.data_features = data_features
         self.data_responses = data_responses
+        self.classes = list(set(self.data_responses))
+        if len(self.classes) > 2:
+            raise EvalError('More than two classes!')
+        if pos_label is None:
+            self.pos_label = self.data_responses.iloc[0]
+        else:
+            self.pos_label = pos_label
 
     def cv_split(self, k=10):
         '''
@@ -90,12 +105,18 @@ class Evaluate(object):
             The number of folds to divide the data into
         '''
 
+        self.k = k
         self.cv = cross_validation.StratifiedKFold(
             self.data_responses,
             n_folds=k
             )
 
-    def compute_scores(self, test_features=None, test_responses=None):
+    def compute_scores(
+            self,
+            test_features=None,
+            test_responses=None,
+            metrics=['accuracy', 'auc', 'precision', 'recall', 'f1']
+            ):
         '''
         Compute the metric scores for the model on the
         cross-validation folds of the training data
@@ -115,19 +136,117 @@ class Evaluate(object):
             on the cv folds.
         '''
 
-        self.accuracies = []
+        # if only one metric is passed as a string, turn it into a list
+        if not type(metrics) is list:
+            metrics = [metrics]
+
+        # build the scores dataframe
+        self.scores = self.build_scores_df()
+
         for i, (train, test) in enumerate(self.cv):
+
+            # fit the model
             self.model.fit(
                 self.data_features[train],
                 self.data_responses[train]
                 )
-            predictions = self.model.predict(self.data_features[test])
-            self.accuracies.append(
-                self.accuracy(
+
+            # make the predictions if there's a metric besides auc
+            if not metrics == ['auc']:
+                predictions = self.model.predict(self.data_features[test])
+
+            # make probability predictions if auc is a metric
+            if 'auc' in metrics:
+                prob_preds = self.model.predict_proba(self.data_features[test])
+
+            if 'accuracy' in metrics:
+                acc = self.accuracy(
                     test_responses=self.data_responses[test],
                     predictions=predictions
                     )
-                )
+                self.scores.loc['accuracy']['fold'][i] = acc
+
+            if 'auc' in metrics:
+
+                # add fpr, tpr and thresh to roc list
+                fpr, tpr, thresh = skmetrics.roc_curve(
+                    y_true=self.data_responses[test],
+                    y_score=prob_preds[:, 1],
+                    pos_label=self.pos_label
+                    )
+                try:
+                    self.roc.append([fpr, tpr, thresh])
+                except:
+                    self.roc = [[fpr, tpr, thresh]]
+
+                # compute the auc
+                self.scores.loc['auc']['fold'][i] = skmetrics.auc(fpr, tpr)
+
+            if 'precision' in metrics:
+                sum_prec = 0.0
+                for cl in self.classes:
+                    prec = skmetrics.precision_score(
+                        y_true=self.data_responses[test],
+                        y_pred=predictions,
+                        pos_label=cl
+                        )
+                    sum_prec += prec
+                    ind = ('precision', 'class {}'.format(cl))
+                    self.scores.xs(ind)['fold'][i] = prec
+                self.scores.xs(('precision', 'avg'))['fold'][i] = sum_prec/2
+
+            if 'recall' in metrics:
+                sum_rec = 0.0
+                for cl in self.classes:
+                    rec = skmetrics.recall_score(
+                        y_true=self.data_responses[test],
+                        y_pred=predictions,
+                        pos_label=cl
+                        )
+                    sum_rec += rec
+                    ind = ('recall', 'class {}'.format(cl))
+                    self.scores.xs(ind)['fold'][i] = rec
+                self.scores.xs(('recall', 'avg'))['fold'][i] = sum_rec/2
+
+            if 'f1' in metrics:
+                sum_f1 = 0.0
+                for cl in self.classes:
+                    f1 = skmetrics.f1_score(
+                        y_true=self.data_responses[test],
+                        y_pred=predictions,
+                        pos_label=cl
+                        )
+                    sum_f1 += f1
+                    ind = ('f1', 'class {}'.format(cl))
+                    self.scores.xs(ind)['fold'][i] = f1
+                self.scores.xs(('f1', 'avg'))['fold'][i] = sum_f1/2
+
+            # add min, max, mean, std
+            for i in self.scores.index:
+                self.scores.xs(i)['min'] = np.min(self.scores.xs(i)['fold'])
+                self.scores.xs(i)['max'] = np.max(self.scores.xs(i)['fold'])
+                self.scores.xs(i)['mean'] = np.mean(self.scores.xs(i)['fold'])
+                self.scores.xs(i)['std'] = np.std(self.scores.xs(i)['fold'])
+
+    def build_scores_df(self):
+        '''Build the scores dataframe.'''
+
+        metrics_level_1 = pd.MultiIndex.from_tuples([('accuracy',), ('auc',)])
+        metrics_level_2 = pd.MultiIndex.from_product([
+            ['precision', 'recall', 'f1'],
+            ['class {}'.format(cl) for cl in self.classes]+['avg']
+            ])
+        fold_columns = pd.MultiIndex.from_tuples(
+            [('fold', i) for i in xrange(self.k)]
+            )
+        agg_columns = pd.MultiIndex.from_tuples(
+            [(agg, '') for agg in ['min', 'max', 'mean', 'std']]
+            )
+        scores = pd.DataFrame(
+            columns=fold_columns | agg_columns,
+            index=metrics_level_1 | metrics_level_2
+            )
+        return scores
 
     def accuracy(self,
                  test_responses,
@@ -162,7 +281,7 @@ class Evaluate(object):
             else:
                 self.model.fit(train)
 
-        if not predictions:
+        if predictions is None:
             # make the prediction
             predictions = self.model.predict(test_features)
 
@@ -173,3 +292,7 @@ class Evaluate(object):
 
         # calculate and return the accuracy
         return np.mean(test_responses == predictions)
+
+    def compute_curves(self):
+        '''Plot ROC and precision recall curves.'''
+        pass
