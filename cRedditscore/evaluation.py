@@ -89,13 +89,14 @@ class Evaluate(object):
         self.model = model
         self.data_features = data_features
         self.data_responses = data_responses
-        self.classes = list(set(self.data_responses))
-        if len(self.classes) > 2:
-            raise EvalError('More than two classes!')
-        if pos_label is None:
-            self.pos_label = self.data_responses.iloc[0]
-        else:
-            self.pos_label = pos_label
+        if data_responses is not None:
+            self.classes = list(set(self.data_responses))
+            if len(self.classes) > 2:
+                raise EvalError('More than two classes!')
+            if pos_label is None:
+                self.pos_label = self.data_responses.iloc[0]
+            else:
+                self.pos_label = pos_label
 
     def cv_split(self, k=10):
         '''
